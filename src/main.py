@@ -67,7 +67,6 @@ def run() -> int:
 
     flux = build_flux_query(
         bucket=settings.influx_bucket,
-        measurement=settings.influx_measurement,
         window=FluxWindow(start=query_start, stop=query_stop),
     )
 

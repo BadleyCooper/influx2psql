@@ -21,23 +21,23 @@ class FluxWindow:
 	start: datetime
 	stop: datetime | None = None
 
-def build_flux_query(
-	bucket: str,
-	measurement: str,
-	window: FluxWindow,
-) -> str:
-	start_expr = to_rfc3339(window.start)
-	if window.stop is None:
-		stop_expr = "now()"
-	else:
-		stop_expr = to_rfc3339(window.stop)
-	bucket_q = quote_flux_string(bucket)
-	measurement_q = quote_flux_string(measurement)
 
-	return f"""
+def build_flux_query(bucket: str, window: FluxWindow) -> str:
+    start_expr = to_rfc3339(window.start)
+
+    if window.stop is None:
+        stop_expr = "now()"
+    else:
+        stop_expr = to_rfc3339(window.stop)
+
+    bucket_q = quote_flux_string(bucket)
+
+    return f"""
 from(bucket: {bucket_q})
-	|> range(start: {start_expr}, stop: {stop_expr})
-	|> filter(fn: (r) => r._measurement == {measurement_q})
+  |> range(start: {start_expr}, stop: {stop_expr})
+  |> filter(fn: (r) => r["_measurement"] == "lic_volumes")
+  |> filter(fn: (r) => r["_field"] == "volume_usd")
+  |> keep(columns: ["_time", "_value", "_measurement", "_field", "license_id", "license_key", "platform_owner"])
 """.strip()
 
 class InfluxClient:

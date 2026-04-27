@@ -4,28 +4,30 @@ BEGIN;
 DROP TABLE IF EXISTS etl_watermarks;
 DROP TABLE IF EXISTS metrics_influx;
 
--- datatable fron influxdb
-CREATE TABLE IF NOT EXISTS metrics_influx (
-	time		timestamptz		NOT NULL,
-	measurement	text			NOT NULL,
-	field		text			NOT NULL,
-	host		text			NOT NULL DEFAULT '',
-	tags		jsonb			NULL,
-	value_num	double precision	NULL,
-	value_text	text			NULL,
-	ingested_at	timestamptz		NOT NULL DEFAULT now()
+-- datatable for influx data
+CREATE TABLE metrics_influx (
+    time         timestamptz      NOT NULL,
+    measurement  text             NOT NULL,
+    field        text             NOT NULL,
+    host         text             NOT NULL DEFAULT '',
+    series_key   text             NOT NULL,
+    tags         jsonb            NULL,
+    value_num    double precision NULL,
+    value_text   text             NULL,
+    ingested_at  timestamptz      NOT NULL DEFAULT now()
 );
 
--- UNIQUE index for point
-CREATE UNIQUE INDEX IF NOT EXISTS ux_metrics_influx_point
-	ON metrics_influx (time, measurement, field, host);
+CREATE UNIQUE INDEX ux_metrics_influx_point
+    ON metrics_influx (time, measurement, field, series_key);
 
---time indexes
-CREATE INDEX IF NOT EXISTS ix_metrics_influx_time
-	ON metrics_influx (time);
+CREATE INDEX ix_metrics_influx_time
+    ON metrics_influx (time);
 
-CREATE INDEX IF NOT EXISTS ix_metrics_influx_host_time
-	ON metrics_influx (host, time);
+CREATE INDEX ix_metrics_influx_host_time
+    ON metrics_influx (host, time);
+
+CREATE INDEX ix_metrics_influx_series_key
+    ON metrics_influx (series_key);
 
 --watermark tablee
 CREATE TABLE IF NOT EXISTS etl_watermarks (

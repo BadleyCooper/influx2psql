@@ -1,8 +1,11 @@
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
+
+import json 
 
 SYSTEM_COLUMNS = {
     "result",
@@ -21,9 +24,15 @@ class MetricRow:
     measurement: str
     field: str
     host: str
+    series_key: str
     tags: dict[str, str] | None
     value_num: float | None
     value_text: str | None
+
+def build_series_key(tags: dict[str, str] | None) -> str:
+    if not tags:
+        return ""
+    return json.dumps(tags, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
 
 
 def parse_rfc3339(value: str) -> datetime:
@@ -104,6 +113,7 @@ def transform_row(row: dict[str, str]) -> MetricRow:
     time = parse_rfc3339(time_raw)
     tags = extract_tags(row)
     host = tags.get("host", "")
+    series_key = build_series_key(tags)
 
     value_num = parse_numeric(value_raw)
     value_text = None
@@ -117,6 +127,7 @@ def transform_row(row: dict[str, str]) -> MetricRow:
         measurement=measurement,
         field=field,
         host=host,
+	series_key=series_key,
         tags=tags or None,
         value_num=value_num,
         value_text=value_text,

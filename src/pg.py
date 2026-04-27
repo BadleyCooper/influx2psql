@@ -11,7 +11,7 @@ from transform import MetricRow
 
 
 def metric_identity(row: MetricRow) -> tuple:
-    return (row.time, row.measurement, row.field, row.host)
+    return (row.time, row.measurement, row.field, row.series_key)
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
@@ -72,12 +72,13 @@ class PostgresStore:
                 measurement,
                 field,
                 host,
+		series_key,
                 tags,
                 value_num,
                 value_text
             )
             VALUES %s
-            ON CONFLICT (time, measurement, field, host)
+            ON CONFLICT (time, measurement, field, series_key)
             DO UPDATE SET
                 tags = EXCLUDED.tags,
                 value_num = EXCLUDED.value_num,
@@ -91,6 +92,7 @@ class PostgresStore:
                 row.measurement,
                 row.field,
                 row.host,
+		row.series_key,
                 Json(row.tags) if row.tags is not None else None,
                 row.value_num,
                 row.value_text,
